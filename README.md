@@ -25,6 +25,9 @@ experiencing major Laravel concepts
 * Localisation 
 * ... 
 
+## How to follow this step by step project 
+back to the trees ... juste follow the git branches which have this schema number_title i.e 1_routing 2_template_and_views 
+
 ## Routing 
 Some useful information about routing in Laravel 
 (Of course i will use controllers later as the project will grow)
