@@ -1,9 +1,9 @@
 @extends('layouts.app')
 
-@section('title','demo index page')
+@section('title','posts')
 
 @section('content')
-    <h1>Demo Index page </h1>
+    <h1>Post Index  </h1>
     <div class="content">
         @forelse($posts as $post)
             <section>

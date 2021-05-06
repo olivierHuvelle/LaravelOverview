@@ -343,3 +343,116 @@ There are lots of usefull other request options
     if(request()->filled('name'))
 
 ```
+
+## Controller basics 
+### Basics 
+**create the controller**
+
+php artisan make:controller HomeController 
+
+**implement this very simple controller**
+```
+class HomeController extends Controller
+{
+    public function home()
+    {
+        return view('home.index');
+    }
+
+    public function contact()
+    {
+        return view('home.contact');
+    }
+}
+```
+
+**refactore the routing**
+```
+use App\Http\Controllers\HomeController;
+
+Route::name('home.')->group(function(){
+    Route::get('/', [HomeController::class, 'index'])->name('index');
+    Route::get('/contact', [HomeController::class, 'contact'])->name('contact');
+});
+```
+
+type php artisan route:list | grep home -> notice the controllername@method field !
+
+### Single action controller 
+php artisan make:controller NameController --invokable; 
+
+This will create a controller which implements the __invoke method ! 
+
+### Resoruce controller 
+php artisan make:controller NameController -r which is the same as php artisan make:controller NameController --resource 
+
+If you want to create a dependance injection with a model : php artisan make:controller -r --model=ModelName
+
+And if you want to create a resource controller for an api php artisan make:controller NameController --api 
+
+### Let's create a controller for our Posts ()
+php artisan make:controller PostsController -r  (no model for now, notice the name which is a strong convention)
+
+**Refactor routing :   web.php**
+```
+use App\Http\Controllers\PostsController;
+
+Route::resource('posts', PostsController::class)->only(['index', 'show']); 
+```
+We will only use the index and show method for now since we don't have a dedicated model Yet 
+
+**Refactor the view directory**
+*views 
+    *posts 
+        *index.blade.php 
+        *show.blade.php 
+
+**Implement the PostsController**
+```
+class PostsController extends Controller
+{
+     private $posts = [
+            1 => [
+                'title' => 'title 1',
+                'content' => 'content 1',
+                'is_new' => true
+            ],
+            2 => [
+                'title' => 'title 2',
+                'content' => 'content 2',
+                'is_new' => false
+            ],
+            3 => [
+                'title' => 'title 3',
+                'content' => 'content 3',
+                'is_new' => false
+            ]
+    ];   
+    
+     /**
+     * Display a listing of the resource.
+     *
+     * @return Response
+     */
+    public function index()
+    {
+        return response()->view('posts.index', ['posts' => $this->posts]);
+    }
+
+    /**
+     * Display the specified resource.
+     *
+     * @param  int  $id
+     * @return Response
+     */
+    public function show($id)
+    {
+        abort_if(!isset($this->posts[$id]), 404);
+        return response()->view('posts.show', ['post' => $this->posts[$id]]);
+    }
+}
+```
+In 2021 we care about php typing ! :) 
+
+
+
