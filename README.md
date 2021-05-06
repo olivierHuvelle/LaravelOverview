@@ -457,5 +457,14 @@ class PostsController extends Controller
 ```
 In 2021 we care about php typing ! :) 
 
+## Configuration and environments 
+### Configuration and Environments overview 
+Go to config directory (root > config)
+
+Ex : database.php -> see how it uses env helper (which will check if the value is set in the .env file) and has in general a fall_back value 
+
+Set the db connexion settings in your .env file (DB_DATABASE, DB_USERNAME, DB_PASSWORD)
+
+
 
 
