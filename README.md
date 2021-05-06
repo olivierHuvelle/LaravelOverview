@@ -466,5 +466,155 @@ Ex : database.php -> see how it uses env helper (which will check if the value i
 Set the db connexion settings in your .env file (DB_DATABASE, DB_USERNAME, DB_PASSWORD)
 
 
+## Database 
+
+* Migration -> manage the database schema 
+* Seeding -> populate the database with data (this can be fake data of course) 
+* Raw Queries and Eloquent ORM 
+
+### Migration overview   
+
+migration is a php class , it has 2 methods 
+* up() and down() 
+* it uses Schema class (tables) and Blueprint class (table columns) 
+
+artisan commands 
+* artisan migrate 
+* artisan migrate:rollback 
+
+the migrations are in the migrations folder 
+
+### Creating and running migrations 
+**create the model and migration**
+
+php artisan make:model Post -m //-m for --migration it will create the associated migration 
+
+**implement the migration**
+```
+class CreatePostsTable extends Migration
+{
+    /**
+     * Run the migrations.
+     *
+     * @return void
+     */
+    public function up()
+    {
+        Schema::create('posts', function (Blueprint $table) {
+            $table->id();
+            $table->string('title');
+            $table->text('content');
+            $table->timestamps();
+        });
+    }
+
+    /**
+     * Reverse the migrations.
+     *
+     * @return void
+     */
+    public function down()
+    {
+        Schema::dropIfExists('posts');
+    }
+}
+```
+
+**apply/rollback migration**
+php artisan migrate 
+php artisan migrate:rollback 
+
+### Eloquent ORM 
+
+1 model -> 1 table  
+model properties match the column names 
+
+model has instance-based methods and static-methods 
+* instance-based methods 
+    * save() 
+    * delete() 
+* static methods 
+    * find()
+    * create() // creates a model with data and immediately save it 
+    * make() // creates a model with data without saving 
+* additional features 
+    * relationships 
+    * events 
+
+### Models + introducing tinker  
+
+**launch tinker**
+php artisan tinker 
+
+**create and save a new model instance**
+```
+$post = new Post(); 
+$post->title = 'a first title', 
+$post->content = 'a first description'; 
+$post->save(); //returns true if no error occurred 
+$post; //returns the post with all its properties
+```
+
+**update the model instance**
+```
+$post = Post::find(1);  //if the id does not exist returns null 
+$post->title = 'a new title'; 
+$post->save(); 
+```
+
+
+### Retrieving a single model 
+an alternative to ::find ::findOrFail :) 
+```
+$post = Post::findOrFail(1); 
+```
+
+### Retrieving multiple models / collection  
+```
+$posts = Post::all(); //returns a collection (which has a LOT of convenient methods) 
+$posts = Post::find([1,2,...,n]); //returns a collection of the found elements 
+$posts->first(); 
+$posts->count(); 
+$posts->map(function($post){ somde code }); 
+```
+<p><a href="https://laravel.com/docs/8.x/collections">See the collection documentation, it's great :D </a></p>
+
+### Query builder 
+```
+php artisan tinker 
+
+User::factory()->count(5)->create(); 
+$users = User::where('id', '>=', 3)->get(); 
+$users = User::where('id', '>=', 2)->orderBy('id', 'desc')->get(); 
+$posts = Post::orderBy('created_at', 'desc')->take(5)->get(); // look how easy it is :D 
+```
+
+General principle : QueryBuilder method call returns a new Query builder instance so you'll always need to call the get method of the builder object 
+
+### Practical 
+**Refactore the PostsController**
+
+```
+public function index()
+{
+    return response()->view('posts.index', ['posts' => Post::all()]);
+}
+
+/**
+ * Display the specified resource.
+ *
+ * @param Post $post
+ * @return Response
+ */
+public function show(Post $post)
+{
+    return response()->view('posts.show', ['post' => $post]);
+}
+```
+
+Notice we changed the show method by adding a dependance injection -> it works as a findOrFail($id) and throws a 404 error if resource not found 
+
+
+
 
 

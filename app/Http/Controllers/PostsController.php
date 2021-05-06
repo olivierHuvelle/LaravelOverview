@@ -2,29 +2,12 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Post;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
 
 class PostsController extends Controller
 {
-    private $posts = [
-        1 => [
-            'title' => 'title 1',
-            'content' => 'content 1',
-            'is_new' => true
-        ],
-        2 => [
-            'title' => 'title 2',
-            'content' => 'content 2',
-            'is_new' => false
-        ],
-        3 => [
-            'title' => 'title 3',
-            'content' => 'content 3',
-            'is_new' => false
-        ]
-    ];
-
     /**
      * Display a listing of the resource.
      *
@@ -32,7 +15,7 @@ class PostsController extends Controller
      */
     public function index()
     {
-        return response()->view('posts.index', ['posts' => $this->posts]);
+        return response()->view('posts.index', ['posts' => Post::all()]);
     }
 
     /**
@@ -59,13 +42,12 @@ class PostsController extends Controller
     /**
      * Display the specified resource.
      *
-     * @param  int  $id
+     * @param Post $post
      * @return Response
      */
-    public function show($id)
+    public function show(Post $post)
     {
-        abort_if(!isset($this->posts[$id]), 404);
-        return response()->view('posts.show', ['post' => $this->posts[$id]]);
+        return response()->view('posts.show', ['post' => $post]);
     }
 
     /**
