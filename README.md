@@ -52,4 +52,238 @@ Route::pattern('id', '[0-9]+');
 ```
 You can now get rid of the where statement in the route declaration ! 
 
+## Templating and Views 
+### General information
+Blade templates are compiled and cached so almost zero overhead to your app. 
+Don't forget to name your blade template as the route that calling it (Clean code)
+
+### Template inheritance 
+When creating an app with blade your can split your code several ways 
+* option1 : create templates and use the blade inheritance 
+* option2 : create blade components 
+
+I will cover both, i personally use templates to manage big  chunks of code and components as small re-usable snippets 
+
+* views 
+    * home > index.blade.php 
+    * layouts > app.blade.php (main template)
+    
+**app.blade.php**
+```
+<!DOCTYPE html>
+<html lang="{{ app()->getLocale() }}">
+    <head>
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+        <title>LaravelOverview : | @yield('title')</title>
+    </head>
+    <body>
+        <main>
+            @yield('content')
+        </main>
+    </body>
+</html>
+```
+
+**index.blade.php**
+```
+@extends('layouts.app')
+
+@section('title','homepage')
+
+@section('content')
+    <h1>Homepage</h1>
+@endsection
+```
+
+As you can see template inheritance is very easy and convenient ! 
+
+### Refactoring web.php 
+As we have some dummy routes which only render views we can do it as so 
+```
+Route::name('home.')->group(function(){
+    Route::view('/', 'home.index')->name('index');
+    Route::view('/contact', 'home.contact')->name('contact');
+});
+```
+This as some advantages :
+* route - name prefix 
+* no allowed controller 
+* clean code still ! 
+
+
+###Transmit data to blade file 
+As it is only for demonstration purpose i wont implement this code on the repo 
+
+**Demo routing with closure**
+```
+Route::get('/demo/{id}', function($id){
+    $posts = [
+        1 => [
+            'title' => 'title 1',
+            'content' => 'content 1'
+        ],
+        2 => [
+            'title' => 'title 2',
+            'content' => 'content 2'
+        ],
+        3 => [
+            'title' => 'title 3',
+            'content' => 'content 3'
+        ]
+    ];
+    abort_if(!isset($posts[$id]), 404);
+
+    return view('home.demo', ['post' => $posts[$id]]);
+});
+```
+Notice 
+* the use of $id variable from route to closure 
+* abort_if (condition, error_code) 
+
+**home.blade.php**
+```
+@extends('layouts.app')
+
+@section('title','homepage')
+
+@section('content')
+    <h1>{{ $post['title'] }}</h1>
+    <div class="content">
+        {{ $post['content'] }}
+    </div>
+@endsection
+```
+
+Notice the mustache syntax , it is escaped and so secure :) 
+
+### Conditional rendering
+```
+@if(condition)
+    code to display 
+@elseif(condition) 
+    code to display 
+@else 
+    code to display
+```
+
+As a example let's add is_new key to our $posts variable 
+
+```
+@extends('layouts.app')
+
+@section('title','homepage')
+
+@section('content')
+    <h1>{{ $post['title'] }}</h1>
+
+    <div>
+        @if($post['is_new'])
+            <strong>This is a new post!</strong>
+        @else
+            <u>This is not a new post !</u>
+        @endif
+    </div>
+
+    <div class="content">{{ $post['content'] }}</div>
+@endsection
+```
+
+<p><a href="https://laravel.com/docs/8.x/blade">Check out the blade documentation</a></p>
+
+There are many useful blade directives , i won't cover them all . It is as always possible to create your own directives ! 
+
+```
+@unless(condition_to_be_false) 
+    .... 
+@endunless 
+
+@isset($variable_name) 
+    ... 
+@endisset 
+```
+
+### Loops 
+```
+    @foreach($variables as $variable) 
+        ... do something with $variable 
+    @endforeach
+
+    @forelse($variables as $variable) 
+        ... do something with $variable 
+    @empty 
+        ... do something when $variables is empty 
+    @endforelse 
+
+    @for($i=0: $i<10; $i++) 
+        instruction 
+    @endfor 
+
+    etc ... 
+
+    @break(condition) , @continue(condition)  and $loop special variable 
+```
+
+As an example let's refactore our dummy code 
+
+**web.php**
+```
+$posts = [
+    1 => [
+        'title' => 'title 1',
+        'content' => 'content 1',
+        'is_new' => true
+    ],
+    2 => [
+        'title' => 'title 2',
+        'content' => 'content 2',
+        'is_new' => false
+    ],
+    3 => [
+        'title' => 'title 3',
+        'content' => 'content 3',
+        'is_new' => false
+    ]
+];
+
+Route::get('/demo/{id}', function($id) use ($posts){
+
+    abort_if(!isset($posts[$id]), 404);
+    return view('home.demo', ['post' => $posts[$id]]);
+})->name('demo.show');
+
+Route::get('/demos', function() use ($posts){
+    return view('home.demo_index', compact('posts'));
+})->name('demo.index');
+
+```
+Notice the use of compact , a very common function to transmit data to views  ! 
+
+
+**demo_index.blade.php**
+```
+@extends('layouts.app')
+
+@section('title','demo index page')
+
+@section('content')
+    <h1>Demo Index page </h1>
+    <div class="content">
+        @forelse($posts as $post)
+            <section>
+                <h2>{{ $post['title'] }}</h2>
+                <p>{{ $post['content'] }}</p>
+            </section>
+        @empty
+            <div>No post yet!</div>
+        @endforelse
+    </div>
+@endsection
+```
+
+Of course i will cover implement soon models and controllers et we will use real data :) 
+
+### Partial templates 
+! Convention partials > _file_name.blade.php 
+Beware that all variables from the file calling the template are available in the template itself which is not true when using the @each directive ! 
 
