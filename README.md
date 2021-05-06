@@ -25,3 +25,31 @@ experiencing major Laravel concepts
 * Localisation 
 * ... 
 
+## Routing 
+Some useful information about routing in Laravel 
+(Of course i will use controllers later as the project will grow)
+
+### Adding optional parameters 
+```
+Route::get('/recent-posts/{days_ago?}', function($daysAgo = 30){
+    return 'Posts in the last '. $daysAgo . ' days ago'; 
+})->name('posts.recent.index'); 
+```
+
+### Validating parameters 
+```
+Route::get('/posts/{id?}', function($id){
+    return 'Post number : ' . $id; 
+})->where(['id' => '[0-9]+'])->name('posts.show'); 
+```
+
+### Just do it globally ! 
+As checking if the id is a very common task and is fllows the same pattern 
+Go to the RouteServiceProvider and register the pattern (append to boot methode)
+
+```
+Route::pattern('id', '[0-9]+');
+```
+You can now get rid of the where statement in the route declaration ! 
+
+
