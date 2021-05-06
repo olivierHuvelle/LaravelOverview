@@ -44,3 +44,13 @@ Route::get('/demo/{id}', function($id) use ($posts){
 Route::get('/demos', function() use ($posts){
     return view('home.demo_index', compact('posts'));
 })->name('demo.index');
+
+Route::get('/response', function() use ($posts){
+    return response($posts, 200)
+           ->header('Content-Type', 'application/json')
+           ->cookie('COOKIE_NAME', 'COOKIE_VALUE', 3600);
+})->name('response');
+
+Route::get('/redirect', function(){
+    return redirect('/contact');
+});

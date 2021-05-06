@@ -287,3 +287,59 @@ Of course i will cover implement soon models and controllers et we will use real
 ! Convention partials > _file_name.blade.php 
 Beware that all variables from the file calling the template are available in the template itself which is not true when using the @each directive ! 
 
+## Request and response 
+### General information
+```
+Route::get('/response', function() use ($posts){
+    return response($posts, 200)
+           ->header('Content-Type', 'application/json')
+           ->cookie('COOKIE_NAME', 'COOKIE_VALUE', 3600);
+})->name('response');
+```
+Take on look on the browser console and see the result ! 
+
+### Redirect
+```
+Route::get('/redirect', function(){
+    return redirect('/contact');
+});
+```
+
+Some other usefull feature : 
+```
+    return back(); 
+    return redirect()->route('demo.show', ['id' => 1]);  //redirection to named route with args 
+    return redirect()->away(''https://google.com); //redirection to another website ! 
+```
+
+### Returning JSON 
+```
+    Route::method('url', function() use($posts) {
+        return response()->json($posts); //notice the use of the response helper again and again 
+    })->name('route_name'); 
+```
+
+### Returning File download 
+```
+     Route::method('url', function() {
+        return response()->download(public_path('/file_name.extension', 'alt_file_name', [optional_header]));
+     })->name('route_name'); 
+```
+
+### Request Overview 
+Try out this code inside your closure / controller 
+```
+    dd(request()->all()); //the request helper is available basically anywhere 
+    dd(request()->input('name', fallback_value)); 
+    dd(request()->query('name', fallback_value));  //will check out only for query parameters 
+```
+
+There are lots of usefull other request options
+```
+    dd(request()->only(['input1', 'input2']); 
+    dd(request()->except(['input1', 'input2']); 
+    dd(request()->has('input_name')); 
+    request()->hasAny(['input1', 'input2']); 
+    if(request()->filled('name'))
+
+```
