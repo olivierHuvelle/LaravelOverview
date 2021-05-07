@@ -1177,3 +1177,38 @@ No comment since it's not a bootstrap tutorial :p
     <div class="content">{{ $post->content }}</div>
 @endsection
 ```
+
+## Testing 
+TDD is a must for every complex app you will add a ton of new functionalities and have to be sure that the code added doesn't break your application 
+
+Notice that laravel comes with a very handy tool : Dusk which allows to perform end-to-end tests easily (but that's not what i will use here). We will stick to functional tests though 
+
+### Introduction
+
+Types of tests 
+* unit tests 
+* feature tests ==> i will use this :) 
+* end to end tests 
+
+root > 
+ * tests 
+    * Feature > tests (feature tests)
+    * Unit > tests (unit tests)
+    * TestCase.php (all the tests will extend from this)
+
+**run the tests**
+./vendor/bin/phpunit to run the test or more intuitive php artisan test 
+
+Test function anatomy 
+* arrange (optional) 
+* act (mandatory)
+* assert (mandatory)
+
+### Testing configuration and environment 
+
+
+
+
+### Writing first functional test 
+### Testing database interaction 
+### Testing CRUD and 
