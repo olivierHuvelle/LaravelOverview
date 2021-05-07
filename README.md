@@ -959,3 +959,125 @@ public function store(PostRequest $request)
 </div>
 ```
 
+## CRUD 
+### Edit 
+**PostController**
+```
+/**
+ * Show the form for editing the specified resource.
+ *
+ * @param Post $post
+ * @return Response
+ */
+public function edit(Post $post)
+{
+    return response()->view('posts.edit', ['post' => $post]);
+} 
+```
+**posts.edit.blade.php**
+```
+<?php /** @var \App\Models\Post $post  */ ?>
+
+@extends('layouts.app')
+
+@section('title', 'update the post')
+
+@section('content')
+    <form action="{{ route('posts.update', ['post' => $post]) }}" method="POST">
+        @csrf()
+        @method('PUT')
+        @include('posts.partials._form')
+    </form>
+@endsection
+```
+
+Nothing really important to show here BUT the @method directive, as you know when you want to update a resource you can either use PUT or PATCH methods 
+
+### Update 
+**PostController**
+```
+/**
+ * Update the specified resource in storage.
+ *
+ * @param PostRequest $request
+ * @param Post $post
+ * @return RedirectResponse
+ */
+public function update(PostRequest $request, Post $post)
+{
+    $data = $request->validated();
+
+    $post->fill(Arr::except($data, $post->getGuarded()));
+    $post->save();
+
+    $request->session()->flash('success', 'The blog post was successfully updated');
+
+    return redirect()->route('posts.show', ['post' => $post]);
+}
+```
+
+Nothing new to say , juste notice de injection dependance 
+
+If you want to do it old school 
+```
+public function update(PostRequest $request, int $id)
+{
+    $data = $request->validated();
+    
+    $post = Post::findOrFail($id); 
+    $post->fill(Arr::except($data, $post->getGuarded()));
+    $post->save();
+
+    $request->session()->flash('success', 'The blog post was successfully updated');
+
+    return redirect()->route('posts.show', ['post' => $post]);
+}
+```
+
+### Destroy 
+**web.php**
+```
+Route::resource('posts', PostsController::class);
+```
+We dont need to except the destroy method anymore :-) 
+
+**posts.show**
+```
+... previous content 
+<form action="{{ route('posts.destroy', ['post' => $post]) }}" method="POST">
+    @csrf
+    @method('DELETE')
+    <button type="submit" class="btn btn-danger my-3">Delete the post</button>
+</form>
+```
+
+**PostController**
+```
+/**
+ * Remove the specified resource from storage.
+ *
+ * @param Request $request
+ * @param Post $post
+ * @return RedirectResponse
+ */
+public function destroy(Request $request, Post $post)
+{
+    $post->delete();
+
+    $request->session()->flash('success', 'The blog post was successfully deleted');
+
+    return redirect()->route('posts.index');
+}
+```
+
+Instead of adding $request in the controller we could implement it using the session helper
+```
+public function destroy(Post $post)
+{
+    $post->delete();
+    
+    session()->flash('success', 'The blog post was successfully deleted');
+
+    return redirect()->route('posts.index');
+}
+```

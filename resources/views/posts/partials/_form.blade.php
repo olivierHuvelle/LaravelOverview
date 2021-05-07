@@ -20,5 +20,3 @@
     @enderror
 </div>
 
-<button type="submit" class="btn btn-primary my-3">Create the post</button>
-

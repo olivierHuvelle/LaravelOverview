@@ -14,4 +14,10 @@
     </div>
 
     <div class="content">{{ $post['content'] }}</div>
+
+    <form action="{{ route('posts.destroy', ['post' => $post]) }}" method="POST">
+        @csrf
+        @method('DELETE')
+        <button type="submit" class="btn btn-danger my-3">Delete the post</button>
+    </form>
 @endsection

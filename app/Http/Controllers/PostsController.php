@@ -4,9 +4,11 @@ namespace App\Http\Controllers;
 
 use App\Http\Requests\PostRequest;
 use App\Models\Post;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
 use Illuminate\Support\Arr;
+use Illuminate\Support\Facades\Redirect;
 use function PHPUnit\Framework\at;
 
 class PostsController extends Controller
@@ -35,7 +37,7 @@ class PostsController extends Controller
      * Store a newly created resource in storage.
      *
      * @param PostRequest $request
-     * @return Response
+     * @return RedirectResponse
      */
     public function store(PostRequest $request)
     {
@@ -75,24 +77,35 @@ class PostsController extends Controller
     /**
      * Update the specified resource in storage.
      *
-     * @param Request $request
+     * @param PostRequest $request
      * @param Post $post
-     * @return void
+     * @return RedirectResponse
      */
-    public function update(Request $request, Post $post)
+    public function update(PostRequest $request, Post $post)
     {
-        //
-        dd(request()->all());
+        $data = $request->validated();
+
+        $post->fill(Arr::except($data, $post->getGuarded()));
+        $post->save();
+
+        $request->session()->flash('success', 'The blog post was successfully updated');
+
+        return redirect()->route('posts.show', ['post' => $post]);
     }
 
     /**
      * Remove the specified resource from storage.
      *
-     * @param  int  $id
-     * @return Response
+     * @param Request $request
+     * @param Post $post
+     * @return RedirectResponse
      */
-    public function destroy($id)
+    public function destroy(Request $request, Post $post)
     {
-        //
+        $post->delete();
+
+        $request->session()->flash('success', 'The blog post was successfully deleted');
+
+        return redirect()->route('posts.index');
     }
 }
