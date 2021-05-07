@@ -1,23 +1,17 @@
+<?php /** @var \App\Models\Post $post  */ ?>
+
 @extends('layouts.app')
 
-@section('title','homepage')
+@section('title', $post->title)
 
 @section('content')
-    <h1>{{ $post['title'] }}</h1>
-
-    <div>
-        @if($post['is_new'])
-            <strong>This is a new post!</strong>
-        @else
-            <u>This is not a new post !</u>
+    <h1 class="mx-0 mb-3">{{ $post->title }}</h1>
+    <p>
+        Added {{ $post->created_at->diffForHumans() }}
+        @if(now()->diffInMinutes($post->created_at) < 10)
+            <span class="badge bg-success">New</span>
         @endif
-    </div>
+    </p>
 
-    <div class="content">{{ $post['content'] }}</div>
-
-    <form action="{{ route('posts.destroy', ['post' => $post]) }}" method="POST">
-        @csrf
-        @method('DELETE')
-        <button type="submit" class="btn btn-danger my-3">Delete the post</button>
-    </form>
+    <div class="content">{{ $post->content }}</div>
 @endsection

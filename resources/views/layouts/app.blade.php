@@ -8,10 +8,11 @@
         <script src="{{ mix('js/app.js') }}" defer></script>
     </head>
     <body>
-        @if(session('success'))
-            @include('layouts.partials._flash_alert')
-        @endif
-        <main>
+        @include('layouts.partials._navigation')
+        <main class="container">
+            @if(session('success'))
+                @include('layouts.partials._flash_alert')
+            @endif
             @yield('content')
         </main>
     </body>

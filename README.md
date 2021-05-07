@@ -1081,3 +1081,99 @@ public function destroy(Post $post)
     return redirect()->route('posts.index');
 }
 ```
+
+## Styling (a bit) the app 
+No comment since it's not a bootstrap tutorial :p 
+### New folder structure 
+* home 
+    * contact 
+    * index 
+* layouts
+    * partials 
+        * _flash_alert
+        * _navigation
+    * app
+* posts 
+    * partials 
+        * _form 
+    * create 
+    * edit 
+    * index 
+    * show 
+
+**app.blade.php**
+```
+<body>
+    @include('layouts.partials._navigation')
+    <main class="container">
+        @if(session('success'))
+            @include('layouts.partials._flash_alert')
+        @endif
+        @yield('content')
+    </main>
+</body>
+```
+**_navigation.blade.php**
+```
+<div class="d-flex flex-column flex-md-row align-items-center px-md-5 py-2 mb-3 border-bottom shadow-sm bg-white">
+    <h2 class="my-0 mr-md-auto">Laravel Overview</h2>
+    <nav class="my-2 my-md-0 mr-md-3">
+        <a class="text-dark p-2" href="{{ route('home.index') }}">Home</a>
+        <a class="text-dark p-2" href="{{ route('home.contact') }}">Contact</a>
+        <a class="text-dark p-2" href="{{ route('posts.index') }}">Posts</a>
+        <a class="text-dark p-2" href="{{ route('posts.create') }}">Create a Post</a>
+    </nav>
+</div>
+```
+**posts.index.blade.php**
+```
+<?php /** @var \App\Models\Post $post  */ ?>
+
+@extends('layouts.app')
+
+@section('title','posts')
+
+@section('content')
+    <h1 class="text-center">Post Index </h1>
+
+    @forelse($posts as $post)
+        <section class="row d-flex align-items-center">
+            <h2 class="col-12 col-md-8 my-0">
+                <a href="{{ route('posts.show', ['post' => $post]) }}"> {{ $post->title }}</a>
+            </h2>
+            <div class="col-12 col-md-4">
+                <a href="{{ route('posts.edit', ['post' => $post]) }}" class="btn btn-outline-success">Update</a>
+
+                <form action="{{ route('posts.destroy', ['post' => $post]) }}" method="POST" class="d-inline">
+                    @csrf
+                    @method('DELETE')
+                    <button type="submit" class="btn btn-outline-danger my-3">Delete</button>
+                </form>
+            </div>
+        </section>
+    @empty
+        <div>No post yet!</div>
+    @endforelse
+@endsection
+```
+
+**posts.show.blade.php**
+```
+<?php /** @var \App\Models\Post $post  */ ?>
+
+@extends('layouts.app')
+
+@section('title', $post->title)
+
+@section('content')
+    <h1 class="mx-0 mb-3">{{ $post->title }}</h1>
+    <p>
+        Added {{ $post->created_at->diffForHumans() }}
+        @if(now()->diffInMinutes($post->created_at) < 10)
+            <span class="badge bg-success">New</span>
+        @endif
+    </p>
+
+    <div class="content">{{ $post->content }}</div>
+@endsection
+```
