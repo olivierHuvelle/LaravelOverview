@@ -20,4 +20,4 @@ Route::name('home.')->group(function(){
     Route::get('/contact', [HomeController::class, 'contact'])->name('contact');
 });
 
-Route::resource('posts', PostsController::class)->only(['index', 'show']);
+Route::resource('posts', PostsController::class)->except(['destroy']);

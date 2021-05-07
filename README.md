@@ -688,5 +688,274 @@ if(mix.inProduction())
 </html>
 ```
 
+## Forms 
+Important note : every route which is not rendered by the get method is protected by the VerifyCsrfToken to prevent csrf attacks. 
+**Never use a route with get method if this one is associated with any kind of data-manipulation**
 
+## A quick refactore 
+I will implement the CRUD actions quickly 
+
+### Routing refactoring 
+```
+Route::resource('posts', PostsController::class)->except(['destroy']);
+```
+I don't allow the destroy method for now as i'm not about to implement this method yet 
+
+### Model refactoring 
+**Post.php**
+```
+class Post extends Model
+{
+    use HasFactory;
+
+    protected $guarded = ['id'];
+}
+```
+I simply add the id field to guarded properties, it will allow me to implement mass assignment easily 
+When working with mass assignement you have 2 options : first listing all the fillable properties , second list the guarded properties 
+
+```
+class Post extends Model
+{
+    use HasFactory;
+
+    protected $fillable = ['title', 'content']; // it's longer and we will implement other properties later that's why i chose to work with guarded instead 
+}
+```
+
+### PostController 
+**create method**
+```
+/**
+ * Show the form for creating a new resource.
+ *
+ * @return Response
+ */
+public function create()
+{
+    return response()->view('posts.create', ['post' => new Post()]);
+}
+```
+I've chosen to create a post in the create method and then transmit it to the view, you could absolutely not doing so and transmit nothing at all but it's quiet cumbersome to manage optional properties in the views
+ 
+### Views + Controller refactoring 
+**new folder structure**
+* posts 
+    * show
+    * index 
+    * edit 
+    * crete 
+    * partials 
+        * _form 
+
+I chose this folder structure as i will use the same form for edit and create the post 
+
+**create.blade.php**
+```
+<?php /** @var \App\Models\Post $post  */ ?>
+
+@extends('layouts.app')
+
+@section('title', 'create a post')
+
+@section('content')
+    <form action="{{ route('posts.store') }}" method="POST">
+        @csrf()
+        @include('posts.partials._form')
+    </form>
+@endsection
+```
+
+The first line is here only for my IDE (phpstorm) to propose me a better auto-completion 
+
+Notice de @csrf() directive 
+
+**posts.partials._form.blade.php**
+```
+<?php /** @var \App\Models\Post $post  */ ?>
+
+<div class="form-group my-3">
+    <label for="title" class="form-label">Title</label>
+    <input type="text" name="title" id="title" class="form-control" value="{{ old('name', $post->title) }}">
+</div>
+
+<div class="form-group my-3">
+    <label for="content">Content</label>
+    <textarea name="content" id="content" class="form-control" rows="5">{{ old('description', $post->content) }}</textarea>
+</div>
+
+<button type="submit" class="btn btn-primary my-3">Create the post</button>
+```
+
+I will refactore this soon with blade components =) 
+
+**PostRequest**
+```
+php artisan make:request PostRequest
+
+class PostRequest extends FormRequest
+{
+    /**
+     * Determine if the user is authorized to make this request.
+     *
+     * @return bool
+     */
+    public function authorize()
+    {
+        return true;
+    }
+
+    /**
+     * Get the validation rules that apply to the request.
+     *
+     * @return array
+     */
+    public function rules()
+    {
+        return [
+            'title' => ['required', 'string', 'max:255'],
+            'content' => ['nullable', 'string', 'min:5']
+        ];
+    }
+}
+```
+The authorize method can be changed fatherly (see policies and dates) for now i will let this request accessible 
+
+ALWAYS sanitize data, NEVER TRUST user input 
+
+**PostController**
+```
+/**
+ * Store a newly created resource in storage.
+ *
+ * @param PostRequest $request
+ * @return Response
+ */
+public function store(PostRequest $request)
+{
+    $data = $request->validated();
+
+    $post = new Post();
+    $post->fill(Arr::except($data, $post->getGuarded()));
+    $post->save();
+    
+    return redirect()->route('posts.show', ['post' => $post]);
+}
+```
+Some notes 
+* Use the request (data validation) 
+* The use of the Arr helper which has a tone of useful features and shortcuts 
+* guetGuarded (if we had worked with fillable) : $post->fill(Arr:only($data, $post->getFillable())
+
+If you don't want to use mass assignment 
+```
+/**
+ * Store a newly created resource in storage.
+ *
+ * @param PostRequest $request
+ * @return Response
+ */
+public function store(PostRequest $request)
+{
+    $data = $request->validated();
+
+    $post = new Post();
+    $post->title = $data['title']; 
+    $post->content = $data['content']; 
+    // imagine the nightmare if you have to manage 50 fields ... 
+    $post->save();
+    
+    return redirect()->route('posts.show', ['post' => $post]);
+}
+```
+
+**posts.partials._form.blade.php**
+Ok but i want to show the validation error messages ! No problem the SareErrorsFromSession middleware will save us :-) 
+
+
+```
+@if($errors->any())
+<div class="alert alert-danger" role="alert">
+    <ul>
+        @foreach($errors->all() as $error)
+            <li>{{ $error }}</li>
+        @endforeach
+    </ul>
+</div>
+@endif
+
+previous code 
+```
+
+Ok but i would rather like the specific-field error to be connected and use the dedicated invalid-feedback of bootstrap ! No problemo .... 
+
+```
+<div class="form-group my-3">
+    <label for="title" class="form-label">Title</label>
+    <input type="text" name="title" id="title" class="form-control @error('title') is-invalid @enderror" value="{{ old('name', $post->title) }}">
+    @error('title')
+    <div class="invalid-feedback">
+        {{$message}}
+    </div>
+    @enderror
+</div>
+
+<div class="form-group my-3">
+    <label for="content">Content</label>
+    <textarea name="content" id="content" class="form-control @error('content') is-invalid @enderror" rows="5">{{ old('description', $post->content) }}</textarea>
+    @error('content')
+    <div class="invalid-feedback">
+        {{$message}}
+    </div>
+    @enderror
+</div>
+
+<button type="submit" class="btn btn-primary my-3">Create the post</button>
+```
+
+Notice that waiting for back validation to have a feedback ... is not very friendly regarding to user experience , you can of course do front-end validation :) 
+
+### Adding a flash session message 
+It would be great to display a flash message such as 'the post was successfully created'
+
+**PostController**
+```
+/**
+ * Store a newly created resource in storage.
+ *
+ * @param PostRequest $request
+ * @return Response
+ */
+public function store(PostRequest $request)
+{
+    $data = $request->validated();
+
+    $post = new Post();
+    $post->fill(Arr::except($data, $post->getGuarded()));
+    $post->save();
+
+    $request->session()->flash('success', 'The blog post was successfully created');
+
+    return redirect()->route('posts.show', ['post' => $post]);
+}
+```
+**app.blade.php**
+```
+@if(session('success'))
+    @include('layouts.partials._flash_alert')
+@endif
+<main>
+    @yield('content')
+</main>
+```
+
+**layouts.partials._flash_alert.blade.php**
+```
+<div class="alert alert-success alert-dismissible fade show" role="alert">
+    <strong>{{ session('success') }}</strong>
+    <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+        <span aria-hidden="true">&times;</span>
+    </button>
+</div>
+```
 
