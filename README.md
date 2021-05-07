@@ -616,5 +616,77 @@ Notice we changed the show method by adding a dependance injection -> it works a
 
 
 
+## Assets and Styling 
+Webpack made easy thx to mix ! 
+
+Some features found in the mix 
+* CSS : Less, Saxs, Stylus and postCSS support 
+* Javascript : ES2017+ , extracting vendor libs, hot module replacement, automatic versionning, build and compule vue components, modules 
+* General : Versioning, Cache-busting and minification 
+
+### Install bootstrap (notice that laravel ui is not recommended anymore)
+composer require laravel/ui ^3.0.0 
+
+php artisan ui bootstrap 
+
+npm install 
+
+npm run dev (compiles the assets)
+
+### Using NOM and compiling assets 
+see package.json -> you will find all the required dependencies (i will let it as it is even though there are some old and deprecated dependencies such as jQuery : 
+the main goal of this project is to focus on laravel capabilities and not on front code :)) 
+
+npm run XXX -> commands found in the package.json script object i.e npm run dev  or npm run hot 
+
+Beware that you can actually have some troubles dued to webpack-cli conflicts (local and global versions killing each other) 
+
+### Include assets in views 
+**app.blade.php**
+```
+ <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+    <title>LaravelOverview | @yield('title')</title>
+    <link rel="stylesheet" href="{{ asset('css/app.css') }}">
+    <script src="{{ asset('js/app.js') }}" defer></script>
+</head>
+```
+
+Notice the defer attribute in the script tag ! If you don't include it the browser will wait until it has completely loaded the script file before rendering the view 
+
+### Versioned assets (cache improvments) 
+
+**webpack.mix.js**
+```
+mix.js('resources/js/app.js', 'public/js')
+    .sass('resources/sass/app.scss', 'public/css')
+    .sourceMaps()
+
+if(mix.inProduction())
+{
+    mix.inProduction()
+}
+```
+
+**app.blade.php**
+```
+<!DOCTYPE html>
+<html lang="{{ app()->getLocale() }}">
+    <head>
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+        <title>LaravelOverview | @yield('title')</title>
+        <link rel="stylesheet" href="{{ mix('css/app.css') }}">
+        <script src="{{ mix('js/app.js') }}" defer></script>
+    </head>
+    <body>
+        <main>
+            @yield('content')
+        </main>
+    </body>
+</html>
+```
+
 
 
