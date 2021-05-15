@@ -1205,10 +1205,107 @@ Test function anatomy
 * assert (mandatory)
 
 ### Testing configuration and environment 
+**phpunit.xml**
 
+```
+<php>
+    <server name="APP_ENV" value="testing"/>
+    <server name="BCRYPT_ROUNDS" value="4"/>
+    <server name="CACHE_DRIVER" value="array"/>
+    <!-- <server name="DB_CONNECTION" value="sqlite"/> -->
+    <!-- <server name="DB_DATABASE" value=":memory:"/> -->
+    <server name="MAIL_MAILER" value="array"/>
+    <server name="QUEUE_CONNECTION" value="sync"/>
+    <server name="SESSION_DRIVER" value="array"/>
+    <server name="TELESCOPE_ENABLED" value="false"/>
+    <server name="DB_CONNECTION" value="sqlite_testing"/>
+</php>
+```
 
+**database.php**
+```
+ 'connections' => 
+    [
+        'sqlite_testing' => [
+            'driver' => 'sqlite',
+            'database' => ':memory:',
+        ],
+        ... 
+```
 
+**clear the cache**
+php artisan config:clear 
 
-### Writing first functional test 
+### Writing functional test 
+
+Testing the static pages (home and contact) -> homeController 
+
+php artisan make:test HomeTest 
+
+**HomeTest.php**
+```
+    public function test_homePage_success()
+    {
+        $response = $this->get(route('home.index'));
+        $response->assertStatus(200);
+        $response->assertSeeText('Homepage');
+    }
+
+    public function test_contactPage_success()
+    {
+        $response = $this->get(route('home.contact'));
+        $response->assertStatus(200);
+        $response->assertSeeText('Contact page');
+    }
+```
+
 ### Testing database interaction 
+
+php artisan make:test PostsTest 
+
+A key factor to understand is that every test has to be independent from the others 
+
+You might expose a connection error because your project doesn't know about sqlite 
+```
+sudo apt-get install php-sqlite3
+composer update
+composer require doctrine/dbal
+```
+
+Some SQLite constraints 
+* if not nullable has to have a default value 
+* 
+
+**PostsTest.php**
+Note : https://laravel.com/docs/8.x/http-tests#available-assertions 
+```
+class PostsTest extends TestCase
+{
+    use RefreshDatabase;
+
+    public function test_no_post_success()
+    {
+        $response = $this->get(route('posts.index'));
+        $response->assertSeeText('No post yet!');
+        $response->assertStatus(200);
+    }
+
+    public function test_1post_success()
+    {
+        $post = Post::create([
+            'title' => 'this is a valid title',
+            'content' => 'this is a valid content we will refactore this using factories'
+        ]);
+
+        $this->assertDatabaseHas('posts', Arr::except($post->toArray(), ['id', 'created_at', 'updated_at']));
+
+        $response = $this->get(route('posts.show', ['post' => $post]));
+        $response->assertSeeText( $post->title );
+        $response->assertSeeText( $post->content );
+        $response->assertStatus(200);
+    }
+}
+```
+
+
 ### Testing CRUD and 
